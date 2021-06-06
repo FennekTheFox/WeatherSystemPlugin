@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class WeatherSystemEditorModulen : ModuleRules
+public class WeatherSystemEditorModule : ModuleRules
 {
-	public WeatherSystemEditorModulen(ReadOnlyTargetRules Target) : base(Target)
+	public WeatherSystemEditorModule(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		

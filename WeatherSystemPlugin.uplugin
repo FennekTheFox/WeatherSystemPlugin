@@ -16,12 +16,12 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "WeatherSystemPlugin",
+			"Name": "WeatherSystemModule",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		},	
 		{
-			"Name": "WeatherSystemEditorPlugin",
+			"Name": "WeatherSystemEditorModule",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
 		}

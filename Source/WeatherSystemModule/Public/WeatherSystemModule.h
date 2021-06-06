@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FWeatherSystemPluginModule : public IModuleInterface
+class FWeatherSystemModule : public IModuleInterface
 {
 public:
 
