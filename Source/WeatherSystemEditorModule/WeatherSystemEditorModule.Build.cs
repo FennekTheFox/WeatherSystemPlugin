@@ -34,19 +34,33 @@ public class WeatherSystemEditorModule : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
+				"Core",
 				"CoreUObject",
-				"Engine",
+				"Json",
 				"Slate",
 				"SlateCore",
-				// ... add private dependencies that you statically link with here ...	
-			}
+				"Engine",
+				"InputCore",
+				"UnrealEd", // for FAssetEditorManager
+				"KismetWidgets",
+				"Kismet",  // for FWorkflowCentricApplication
+				"PropertyEditor",
+				"RenderCore",
+				"ContentBrowser",
+				"WorkspaceMenuStructure",
+				"EditorStyle",
+				"EditorWidgets",
+				"Projects",
+				"AssetRegistry",
+				"WeatherSystemModule"
+            }
 			);
 		
 		
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
-				// ... add any modules that your module loads dynamically here ...
+				"AssetTools"
 			}
 			);
 	}

@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleInterface.h"
-#include "ModuleManager.h"
+#include "Modules/ModuleManager.h"
 #include "Toolkits/AssetEditorToolkit.h"
 
 class ICustomAssetEditor;
@@ -19,5 +19,6 @@ public:
 	/**
 	 * Creates a new custom asset editor.
 	 */
-	virtual TSharedRef<ICustomAssetEditor> CreateCustomAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr< IToolkitHost >& InitToolkitHost, UMyCustomAsset* CustomAsset) = 0;
+
+	virtual TSharedRef<IWSCEditor> CreateWSCEditor(const EToolkitMode::Type Mode, const TSharedPtr< IToolkitHost >& InitToolkitHost, UWeatherSystemConfig* CustomAsset) = 0;
 };
