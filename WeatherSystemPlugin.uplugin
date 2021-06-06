@@ -19,6 +19,11 @@
 			"Name": "WeatherSystemPlugin",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},	
+		{
+			"Name": "WeatherSystemEditorPlugin",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	]
 }
