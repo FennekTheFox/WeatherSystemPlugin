@@ -1,9 +1,5 @@
 # Visual Studio 2015 user specific files
 .vs/
-*.svn*
-
-# Visual Studio 2015 database file
-*.VC.db
 
 # Compiled Object files
 *.slo
@@ -76,7 +72,3 @@ Plugins/*/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
-
-# Don't ignore ThirdParty dlls and exe
-!Content/Uploader/*.dll
-!Content/Uploader/*.exe
