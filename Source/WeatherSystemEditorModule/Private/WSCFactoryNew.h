@@ -1,8 +1,6 @@
 #pragma once
 
 #include "Factories/Factory.h"
-#include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
 #include "WSCFactoryNew.generated.h"
 
 

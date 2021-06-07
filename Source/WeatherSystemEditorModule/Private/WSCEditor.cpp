@@ -8,11 +8,15 @@
 #include "Toolkits/AssetEditorToolkit.h"
 #include "WeatherSystemEditorModule.h"
 #include "ICustomAssetEditorModule.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 #define LOCTEXT_NAMESPACE "WSCEditor"
 
 const FName FWSCEditor::ToolkitFName(TEXT("WSCEditor"));
 const FName FWSCEditor::PropertiesTabId(TEXT("WSCEditor_Properties"));
+const FName FWSCEditor::OverviewTabId(TEXT("WSCEditor_Overview"));
 
 
 void FWSCEditor::RegisterTabSpawners(const TSharedRef<class FTabManager>& InTabManager)
@@ -31,6 +35,10 @@ void FWSCEditor::RegisterTabSpawners(const TSharedRef<class FTabManager>& InTabM
 		.SetDisplayName(LOCTEXT("PropertiesTab", "Details"))
 		.SetGroup(WorkspaceMenuCategory.ToSharedRef())
 		.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Tabs.Details"));
+	InTabManager->RegisterTabSpawner(OverviewTabId, FOnSpawnTab::CreateSP(this, &FWSCEditor::SpawnOverviewTab))
+		.SetDisplayName(LOCTEXT("PropertiesTab", "Details"))
+		.SetGroup(WorkspaceMenuCategory.ToSharedRef())
+		.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Tabs.Viewports"));
 }
 
 void FWSCEditor::UnregisterTabSpawners(const TSharedRef<class FTabManager>& InTabManager)
@@ -40,6 +48,22 @@ void FWSCEditor::UnregisterTabSpawners(const TSharedRef<class FTabManager>& InTa
 
 	// Unregister our custom tab from the tab manager, making sure it is cleaned up when the editor gets destroyed
 	InTabManager->UnregisterTabSpawner(PropertiesTabId);
+	InTabManager->UnregisterTabSpawner(OverviewTabId);
+}
+
+uint32 FWSCEditor::CalculateOrthoWidth()
+{
+	if(WSC)
+		return FMath::Max(WSC->WorldBounds.X, WSC->WorldBounds.Y) + 500;
+
+	return 1;
+}
+
+void FWSCEditor::SynchronizeProperties()
+{
+	OrthoWidth = CalculateOrthoWidth();
+	if (OveriviewCaptureComponent)
+		OveriviewCaptureComponent->OrthoWidth = OrthoWidth;
 }
 
 TSharedRef<SDockTab> FWSCEditor::SpawnPropertiesTab(const FSpawnTabArgs& Args)
@@ -58,6 +82,42 @@ TSharedRef<SDockTab> FWSCEditor::SpawnPropertiesTab(const FSpawnTabArgs& Args)
 		];
 }
 
+
+TSharedRef<SDockTab> FWSCEditor::SpawnOverviewTab(const FSpawnTabArgs& Args)
+{
+	check(Args.GetTabId() == OverviewTabId);
+
+	OrthoWidth = CalculateOrthoWidth();
+
+	OverviewCameraActor = GWorld->SpawnActorDeferred<AActor>(AActor::StaticClass(), FTransform::Identity);
+
+	OveriviewCaptureComponent = NewObject<USceneCaptureComponent2D>(OverviewCameraActor, TEXT("OveriviewSceneCapture"));
+	OverviewCameraActor->SetRootComponent(OveriviewCaptureComponent);
+	OveriviewCaptureComponent->RegisterComponent();
+
+	OveriviewCaptureComponent->TextureTarget = UWeatherSystemEditorLibrary::OverviewRenderTarget;
+	OveriviewCaptureComponent->ProjectionType = ECameraProjectionMode::Type::Orthographic;
+	OveriviewCaptureComponent->OrthoWidth = CalculateOrthoWidth();
+
+	OverviewCameraActor->SetActorLocation(WSC->WorldOrigin+FVector(0.0f,0.0f,100000.0f));
+	OverviewCameraActor->SetActorRotation(FRotator(270.0f,0.0f,0.0f));
+
+	OverviewMID = UMaterialInstanceDynamic::Create(UWeatherSystemEditorLibrary::M_RenderTargetToSlateBrush, WSC, TEXT("OverviewRenderToSlateBrush"));
+	OverviewMID->SetTextureParameterValue(TEXT("RenderTarget"), UWeatherSystemEditorLibrary::OverviewRenderTarget);
+
+	OverviewBrush = UWidgetBlueprintLibrary::MakeBrushFromMaterial(OverviewMID, OrthoWidth, OrthoWidth);
+
+	return SNew(SDockTab)
+		.Icon(FEditorStyle::GetBrush("GenericEditor.Tabs.Viewport"))
+		.Label(LOCTEXT("GenericOverviewTitle", "Overview"))
+		.TabColorScale(GetTabColorScale())
+		[
+			SNew(SImage)
+			.Image(&OverviewBrush)
+		];
+}
+
+
 void FWSCEditor::InitWSCEditor(const EToolkitMode::Type Mode, const TSharedPtr<class IToolkitHost>& InitToolkitHost, UWeatherSystemConfig* InWSC)
 {
 	// Cache some values that will be used for our details view arguments
@@ -66,7 +126,7 @@ void FWSCEditor::InitWSCEditor(const EToolkitMode::Type Mode, const TSharedPtr<c
 	const bool bIsLockable = false;
 
 	// Set this InCustomAsset as our editing asset
-	SetWSC(WSC);
+	SetWSC(InWSC);
 
 	// Retrieve the property editor module and assign properties to DetailsView
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
@@ -74,7 +134,7 @@ void FWSCEditor::InitWSCEditor(const EToolkitMode::Type Mode, const TSharedPtr<c
 	DetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs);
 
 	// Create the layout of our custom asset editor
-	const TSharedRef<FTabManager::FLayout> StandaloneDefaultLayout = FTabManager::NewLayout("Standalone_CustomAssetEditor_Layout_v1")
+	const TSharedRef<FTabManager::FLayout> StandaloneDefaultLayout = FTabManager::NewLayout("Standalone_WeatherSystemConfigEditor_Layout_v1")
 		->AddArea
 		(
 			// Create a vertical area and spawn the toolbar
@@ -88,12 +148,24 @@ void FWSCEditor::InitWSCEditor(const EToolkitMode::Type Mode, const TSharedPtr<c
 			)
 			->Split
 			(
-				// Split the tab and pass the tab id to the tab spawner
-				FTabManager::NewSplitter()
+				FTabManager::NewSplitter()->SetOrientation(Orient_Horizontal)
 				->Split
 				(
 					FTabManager::NewStack()
-					->AddTab(PropertiesTabId, ETabState::OpenedTab)
+					->SetHideTabWell(true)
+					->SetSizeCoefficient(2)
+					->AddTab(OverviewTabId, ETabState::OpenedTab)					
+				)
+				->Split
+				(
+
+					// Split the tab and pass the tab id to the tab spawner
+					FTabManager::NewSplitter()
+					->Split
+					(
+						FTabManager::NewStack()
+						->AddTab(PropertiesTabId, ETabState::OpenedTab)
+					)
 				)
 			)
 		);
@@ -120,6 +192,9 @@ void FWSCEditor::InitWSCEditor(const EToolkitMode::Type Mode, const TSharedPtr<c
 
 FWSCEditor::~FWSCEditor()
 {    
+	if(OverviewCameraActor)
+		OverviewCameraActor->Destroy();
+
 // On destruction we reset our tab and details view 
 	DetailsView.Reset();
 	PropertiesTab.Reset();
@@ -158,7 +233,17 @@ UWeatherSystemConfig* FWSCEditor::GetWSC()
 
 void FWSCEditor::SetWSC(UWeatherSystemConfig* InWSC)
 {
+	if (WSC)
+	{
+		WSC->PostPropertyChangedDelegate.RemoveAll(this);
+	}
+
 	WSC = InWSC;
+
+	if (WSC)
+	{
+		WSC->PostPropertyChangedDelegate.AddRaw(this, &FWSCEditor::SynchronizeProperties);
+	}
 }
 
 

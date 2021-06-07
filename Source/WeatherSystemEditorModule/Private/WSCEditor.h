@@ -9,6 +9,8 @@
 class IDetailsView;
 class SDockableTab;
 class UWeatherSystemConfig;
+class USceneCaptureComponent2D;
+class UMaterialInstanceDynamic;
 
 /**
  *
@@ -47,8 +49,13 @@ public:
 	/** End ICustomAssetEditor initerface */
 
 private:
+	uint32 CalculateOrthoWidth();
+	void SynchronizeProperties();
+
+private:
 	/** Create the properties tab and its content */
 	TSharedRef<SDockTab> SpawnPropertiesTab(const FSpawnTabArgs& Args);
+	TSharedRef<SDockTab> SpawnOverviewTab(const FSpawnTabArgs& Args);
 
 	/** Dockable tab for properties */
 	TSharedPtr< SDockableTab > PropertiesTab;
@@ -58,11 +65,16 @@ private:
 
 	/**	The tab ids for all the tabs used */
 	static const FName PropertiesTabId;
+	static const FName OverviewTabId;
 	static const FName ToolkitFName;
 
 	UWeatherSystemConfig* WSC;
-public:
 
-
+	//Overview Tab Stuff
+	FSlateBrush OverviewBrush;
+	AActor* OverviewCameraActor;
+	USceneCaptureComponent2D* OveriviewCaptureComponent;
+	UMaterialInstanceDynamic* OverviewMID;
+	uint32 OrthoWidth;
 };
 

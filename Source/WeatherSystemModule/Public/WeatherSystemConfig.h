@@ -5,6 +5,7 @@
 
 #include "WeatherSystemConfig.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FPropertyChangedDelegate)
 
 UCLASS(Blueprintable, BlueprintType)
 class WEATHERSYSTEMMODULE_API UWeatherSystemConfig : public UObject
@@ -16,6 +17,13 @@ public:
 		FVector WorldOrigin;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
-		FVector WorldBounds;
+		FIntPoint WorldBounds;
 
+
+	FPropertyChangedDelegate PostPropertyChangedDelegate;
+
+	
+#if WITH_EDITOR
+	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 };

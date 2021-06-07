@@ -52,7 +52,8 @@ public class WeatherSystemEditorModule : ModuleRules
 				"EditorWidgets",
 				"Projects",
 				"AssetRegistry",
-				"WeatherSystemModule"
+				"WeatherSystemModule",
+				"UMG"
             }
 			);
 		

@@ -2,6 +2,7 @@
 
 #include "WeatherSystemEditorModule.h"
 #include "WSCEditor.h"
+#include "AssetTypeActions_WSC.h"
 
 #define LOCTEXT_NAMESPACE "FWeatherSystemPluginModule"
 
@@ -11,6 +12,17 @@ const FName WSCEditorAppIdentifier = FName(TEXT("CustomAssetEditorApp"));
 
 
 void FWeatherSystemEditorModule::StartupModule()
+{
+	MenuExtensibilityManager = MakeShareable(new FExtensibilityManager);
+	ToolBarExtensibilityManager = MakeShareable(new FExtensibilityManager);
+
+	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+	RegisterWSCAssetActions(AssetTools, MakeShareable(new FAssetTypeActions_WSC()));
+
+	WeatherCategory = AssetTools.RegisterAdvancedAssetCategory(TEXT("Weather System"), LOCTEXT("WeatherSystemCategory", "Weather System"));
+}
+
+void FWeatherSystemEditorModule::ShutdownModule()
 {
 	MenuExtensibilityManager.Reset();
 	ToolBarExtensibilityManager.Reset();
@@ -22,17 +34,10 @@ void FWeatherSystemEditorModule::StartupModule()
 		for (int32 i = 0; i < CreatedAssetTypeActions.Num(); ++i)
 		{
 			AssetTools.UnregisterAssetTypeActions(CreatedAssetTypeActions[i].ToSharedRef());
-			WeatherCategory = AssetTools.RegisterAdvancedAssetCategory(TEXT("Weather System"), LOCTEXT("WeatherSystemCategory", "Weather System"));
 		}
 	}
 
 	CreatedAssetTypeActions.Empty();
-}
-
-void FWeatherSystemEditorModule::ShutdownModule()
-{
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
 }
 
 TSharedRef<IWSCEditor> FWeatherSystemEditorModule::CreateWSCEditor(const EToolkitMode::Type Mode, const TSharedPtr< IToolkitHost >& InitToolkitHost, UWeatherSystemConfig* WSC)
@@ -44,7 +49,7 @@ TSharedRef<IWSCEditor> FWeatherSystemEditorModule::CreateWSCEditor(const EToolki
 }
 
 
-void FWeatherSystemEditorModule::RegisterAssetTypeAction(IAssetTools& AssetTools, TSharedRef<IAssetTypeActions> Action)
+void FWeatherSystemEditorModule::RegisterWSCAssetActions(IAssetTools& AssetTools, TSharedRef<IAssetTypeActions> Action)
 {
 	AssetTools.RegisterAssetTypeActions(Action);
 	CreatedAssetTypeActions.Add(Action);
